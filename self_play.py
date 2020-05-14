@@ -16,7 +16,7 @@ from dual_network import *
 
 # パラメータの準備
 SP_GAME_COUNT = 500 # セルフプレイを行うゲーム数（本家は25000）
-SP_TEMPERATURE = 2.0 # ボルツマン分布の温度パラメータ
+SP_TEMPERATURE = 1.0 # ボルツマン分布の温度パラメータ
 
 # 先手プレイヤーの価値
 def first_player_value(ended_state):

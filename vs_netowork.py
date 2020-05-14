@@ -12,7 +12,7 @@ from dual_network import *
 
 # パラメータの準備
 EN_GAME_COUNT = 1000 # 1評価あたりのゲーム数（本家は400）
-EN_TEMPERATURE = 2.0 # ボルツマン分布の温度
+EN_TEMPERATURE = 1.0 # ボルツマン分布の温度
 
 # 先手プレイヤーのポイント
 def first_player_point(ended_state):
