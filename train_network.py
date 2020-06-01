@@ -44,15 +44,11 @@ def train_network():
     model = model.to(device)
     
     model.train()
-    optimizer = optim.SGD(model.parameters(),lr=0.01)
+    optimizer = optim.SGD(model.parameters(),lr=0.01, weight_decay=0.00001)
     
     print("len:" + str(len(xs)))
     
     indexs = [i for i in range(0,len(xs))]
-    
-    criterion_policies = nn.CrossEntropyLoss()
-    criterion_values = nn.MSELoss()
-    criterion_values2 = nn.MSELoss()
     
     for i in range(0,RN_EPOCHS):
         print("epoch:" + str(i),end="")
@@ -73,11 +69,10 @@ def train_network():
             if len(x) == RN_BATCH_SIZE:
                 x = torch.tensor(x,dtype=torch.double)
                 yp = np.array(yp)
-                yp = yp.argmax(axis = 1)
-                yp = torch.tensor(yp,dtype=torch.long)
+                yp = torch.tensor(yp,dtype=torch.double)
                 yv = torch.tensor(yv,dtype=torch.double)
                 yv2 = torch.tensor(yv2,dtype=torch.double)
-                
+
                 x = x.to(device)
                 yp = yp.to(device)
                 yv = yv.to(device)
@@ -89,11 +84,10 @@ def train_network():
                 output_value = torch.squeeze(outputs[1])
 
 
-                loss_policies = criterion_policies(output_policy,yp)
-                loss_values = criterion_values(output_value,yv)
-                loss_values2 = criterion_values2(output_value,yv2) 
-                loss = loss_policies + loss_values + loss_values2
-                #loss = loss_policies + loss_values 
+                loss_policies = torch.sum(-yp* torch.log(output_policy)) / RN_BATCH_SIZE
+                loss_values = torch.sum((output_value - yv) ** 2) / RN_BATCH_SIZE
+                #loss = loss_policies + loss_values + loss_values2
+                loss = loss_policies + loss_values 
 
                 loss.backward()
                 optimizer.step()

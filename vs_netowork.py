@@ -61,7 +61,7 @@ def evaluate_network():
     # ベストプレイヤーのモデルの読み込み
     model1 = DualNet()
     #model1.load_state_dict(torch.load('./learned_param/normal_best.h5'))
-    model1.load_state_dict(torch.load('./learned_param/elmo_50/best.h5'))
+    model1.load_state_dict(torch.load('./learned_param/normal_25_tadashii/best.h5'))
     #model0.load_state_dict(torch.load('./learned_param/elmo2_best.h5'))
     model1 = model1.double()
     model1 = model1.to(device)

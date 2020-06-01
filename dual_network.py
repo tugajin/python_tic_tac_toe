@@ -69,8 +69,10 @@ class DualNet(nn.Module):
         h_p1 = F.relu(self.batch_p1(self.conv_p1(h9)))
 
         h_p1 = h_p1.reshape(h_p1.shape[0],18)
-        
+
         policy = self.fc_p2(h_p1)
+        m = nn.Softmax(dim=1)
+        policy = m(policy)
         
         #value
         
