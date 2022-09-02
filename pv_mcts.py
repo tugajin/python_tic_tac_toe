@@ -22,8 +22,8 @@ def predict(model, state):
     x = np.array([x])
     x = torch.tensor(x,dtype=torch.double)
    
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cpu')
 
     x = x.to(device)
     
@@ -32,11 +32,11 @@ def predict(model, state):
         y = model(x)
 
     # 方策の取得
-    policies = y[0][0][list(state.legal_actions())] # 合法手のみ
+    policies = y[0][0][list(state.legal_actions())].cpu().numpy() # 合法手のみ
     policies /= sum(policies) if sum(policies) else 1 # 合計1の確率分布に変換
 
     # 価値の取得
-    value = y[1][0][0]
+    value = y[1][0][0].item()
     return policies, value
 
 # ノードのリストを試行回数のリストに変換
@@ -111,6 +111,9 @@ def pv_mcts_scores(model, state, temperature):
             t = sum(nodes_to_scores(self.child_nodes))
             pucb_values = []
             for child_node in self.child_nodes:
+                #print(child_node.w)
+                #print(child_node.n)
+                #print(child_node.p)
                 pucb_values.append((-child_node.w / child_node.n if child_node.n else 0.0) +
                     C_PUCT * child_node.p * sqrt(t) / (1 + child_node.n))
 
@@ -134,7 +137,7 @@ def pv_mcts_scores(model, state, temperature):
     else: # ボルツマン分布でバラつき付加
         scores = boltzman(scores, temperature)
          
-    return scores, (root_node.w.item())/(root_node.n)
+    return scores, (root_node.w)/(root_node.n)
 
 # モンテカルロ木探索で行動選択
 def pv_mcts_action(model, temperature=0):
@@ -153,8 +156,8 @@ if __name__ == '__main__':
     # モデルの読み込み
     path = sorted(Path('./model').glob('*.h5'))[-1]
     print(path)
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cpu')
     
     model = DualNet()
     model.load_state_dict(torch.load("./model/best.h5"))

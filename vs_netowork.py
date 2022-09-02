@@ -49,10 +49,9 @@ def evaluate_network():
     # 最新プレイヤーのモデルの読み込み
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = 'cpu'
     model0 = DualNet()
     #model0.load_state_dict(torch.load('./learned_param/elmo2_best.h5'))
-    model0.load_state_dict(torch.load('./learned_param/SE_NET_normal_25/best.h5'))
+    model0.load_state_dict(torch.load('./model/best.h5'))
     model0 = model0.double()
     model0 = model0.to(device)
     model0.eval()

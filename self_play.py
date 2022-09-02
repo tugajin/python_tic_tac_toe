@@ -76,8 +76,8 @@ def self_play():
     history = []
 
     # ベストプレイヤーのモデルの読み込み
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cpu')
     model = DualNet()
     model.load_state_dict(torch.load('./model/best.h5'))
     model = model.double()

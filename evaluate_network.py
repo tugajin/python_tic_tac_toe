@@ -51,8 +51,7 @@ def update_best_player():
 def evaluate_network():
     # 最新プレイヤーのモデルの読み込み
     
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model0 = DualNet()
     model0.load_state_dict(torch.load('./model/latest.h5'))
     model0 = model0.double()

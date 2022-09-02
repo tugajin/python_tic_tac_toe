@@ -170,8 +170,8 @@ def print_network():
     x = np.array([x])
     x = torch.tensor(x,dtype=torch.double)
    
-    device = torch.device('cpu')
-
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     x = x.to(device)
     
     with torch.no_grad():

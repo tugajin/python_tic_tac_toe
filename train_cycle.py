@@ -26,3 +26,4 @@ if __name__ == '__main__':
 
         # 新パラメータ評価部
         evaluate_network()
+        evaluate_problem()

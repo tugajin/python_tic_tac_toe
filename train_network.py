@@ -103,6 +103,11 @@ def train_network():
     # 最新プレイヤーのモデルの保存
     torch.save(model.state_dict(), './model/latest.h5')
 
+def generate_rand_model():
+    model = DualNet()
+    torch.save(model.state_dict(), './model/best.h5')
+
 # 動作確認
 if __name__ == '__main__':
     train_network()
+    
