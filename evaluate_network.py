@@ -100,7 +100,7 @@ def evaluate_network():
 
 def evaluate_problem():
     # ベストプレイヤーのモデルの読み込み
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DualNet()
     model.load_state_dict(torch.load('./model/best.h5'))
     model = model.double()

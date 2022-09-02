@@ -65,7 +65,6 @@ def pv_mcts_scores(model, state, temperature):
             if self.state.is_done():
                 # 勝敗結果で価値を取得
                 if self.state.is_lose():
-                    #value = -1 + (self.state.all_piece_count() * 0.0001)
                     value = -1
                 else:
                     value = 0
@@ -111,9 +110,6 @@ def pv_mcts_scores(model, state, temperature):
             t = sum(nodes_to_scores(self.child_nodes))
             pucb_values = []
             for child_node in self.child_nodes:
-                #print(child_node.w)
-                #print(child_node.n)
-                #print(child_node.p)
                 pucb_values.append((-child_node.w / child_node.n if child_node.n else 0.0) +
                     C_PUCT * child_node.p * sqrt(t) / (1 + child_node.n))
 
