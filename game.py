@@ -75,6 +75,7 @@ class State:
     def __str__(self):
         ox = ('o', 'x') if self.is_first_player() else ('x', 'o')
         str = ''
+        str = "turn:o\n" if self.is_first_player() else "turn:x\n"
         for i in range(9):
             if self.pieces[i] == 1:
                 str += ox[0]

@@ -7,7 +7,6 @@ from dual_network import dual_network
 from self_play import *
 from train_network import train_network
 from evaluate_network import evaluate_network
-from evaluate_best_player import evaluate_best_player
 import multiprocessing as mp
 
 if __name__ == '__main__':
@@ -27,5 +26,3 @@ if __name__ == '__main__':
 
         # 新パラメータ評価部
         evaluate_network()
-        evaluate_problem()
-        evaluate_best_player()

@@ -9,6 +9,7 @@ from pathlib import Path
 from shutil import copy
 import numpy as np
 from dual_network import *
+from evaluate_best_player import evaluate_best_player
 
 # パラメータの準備
 EN_GAME_COUNT = 10 # 1評価あたりのゲーム数（本家は400）
@@ -94,6 +95,7 @@ def evaluate_network():
     if average_point > 0.5:
         update_best_player()
         evaluate_problem()
+        evaluate_best_player()
         return True
     else:
         return False
