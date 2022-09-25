@@ -80,7 +80,6 @@ def self_play():
     #device = torch.device('cpu')
     model = DualNet()
     model.load_state_dict(torch.load('./model/best.h5'))
-    model = model.double()
     model = model.to(device)
     model.eval()
 

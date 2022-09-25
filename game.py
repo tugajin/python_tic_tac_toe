@@ -5,6 +5,33 @@
 # パッケージのインポート
 import random
 import math
+import os
+import pickle
+from datetime import datetime
+
+pos_dict = {}
+ALL_POS_LEN = 3**9
+
+def append_pos_dict(k):
+    if k in pos_dict:
+        num = pos_dict[k]
+        pos_dict[k] = num + 1
+    else:
+        pos_dict[k] = 1
+
+def reset_pos_dict():
+    pos_dict = {}
+
+def len_pos_dict():
+    return len(pos_dict)
+
+# 学習データの保存
+def write_data(history):
+    now = datetime.now()
+    os.makedirs('./base/', exist_ok=True) # フォルダがない時は生成
+    path = './base/base.pos'
+    with open(path, mode='wb') as f:
+        pickle.dump(history, f)
 
 # ゲーム状態
 class State:
@@ -71,11 +98,43 @@ class State:
     def is_first_player(self):
         return self.piece_count(self.pieces) == self.piece_count(self.enemy_pieces)
 
+    # 45度回転
+    def rotate45(self):
+        dist = [6,3,0,7,4,1,8,5,2]
+        tmp_pieces = [0]*9
+        tmp_enemy_pieces = [0]*9
+        for i, index in enumerate(dist):
+            tmp_pieces[i] = self.pieces[index]
+            tmp_enemy_pieces[i] = self.enemy_pieces[index]
+        return State(tmp_pieces, tmp_enemy_pieces)
+    # 左右反転
+    def mirror(self):
+        dist = [2,1,0,5,4,3,8,7,6]
+        tmp_pieces = [0]*9
+        tmp_enemy_pieces = [0]*9
+        for i, index in enumerate(dist):
+            tmp_pieces[i] = self.pieces[index]
+            tmp_enemy_pieces[i] = self.enemy_pieces[index]
+        return State(tmp_pieces, tmp_enemy_pieces)
+    
+    def hash_key(self):
+        key = 0
+        offset = 10**8
+        for piece, enemy in zip(self.pieces,self.enemy_pieces):
+            tmp_key = 1
+            if piece == 1:
+                tmp_key = 2
+            elif enemy == 1:
+                tmp_key = 3
+            key += tmp_key * offset
+            offset /= 10
+        return int(key)
     # 文字列表示
     def __str__(self):
         ox = ('o', 'x') if self.is_first_player() else ('x', 'o')
         str = ''
         str = "turn:o\n" if self.is_first_player() else "turn:x\n"
+        str += f"hash:{self.hash_key()}\n"
         for i in range(9):
             if self.pieces[i] == 1:
                 str += ox[0]
@@ -233,20 +292,25 @@ def mcts_action(state):
         n_list.append(c.n)
     return legal_actions[argmax(n_list)]
 
+def gen_pos_list():
+    history = []
+    # 状態の生成
+    for i in range(2000000000):
+        state = State()
+        print(f"\rtry:{i} num:{len_pos_dict()}",end="")
+        #ゲーム終了までのループ
+        while True:
+            if state.hash_key() not in pos_dict:
+                history.append([state.pieces, state.enemy_pieces])
+            append_pos_dict(state.hash_key())
+            # ゲーム終了時
+            if state.is_done():
+                break
+
+            # 次の状態の取得
+            state = state.next(random_action(state))
+    print(f"history_len:{len(history)}")
+    write_data(history)
 # 動作確認
 if __name__ == '__main__':
-    # 状態の生成
-    state = State()
-
-    # ゲーム終了までのループ
-    while True:
-        # ゲーム終了時
-        if state.is_done():
-            break
-
-        # 次の状態の取得
-        state = state.next(random_action(state))
-
-        # 文字列表示
-        print(state)
-        print()
+    gen_pos_list()

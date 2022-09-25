@@ -65,7 +65,6 @@ def evaluate_best_player():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DualNet()
     model.load_state_dict(torch.load("./model/best.h5"))
-    model = model.double()
     model = model.to(device)
     # PV MCTSで行動選択を行う関数の生成
     next_pv_mcts_action = pv_mcts_action(model, 0.0)

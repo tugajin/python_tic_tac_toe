@@ -52,7 +52,6 @@ def evaluate_network():
     model0 = DualNet()
     #model0.load_state_dict(torch.load('./learned_param/elmo2_best.h5'))
     model0.load_state_dict(torch.load('./model/best.h5'))
-    model0 = model0.double()
     model0 = model0.to(device)
     model0.eval()
     
@@ -62,7 +61,6 @@ def evaluate_network():
     #model1.load_state_dict(torch.load('./learned_param/normal_best.h5'))
     model1.load_state_dict(torch.load('./learned_param/normal_25_tadashii/best.h5'))
     #model0.load_state_dict(torch.load('./learned_param/elmo2_best.h5'))
-    model1 = model1.double()
     model1 = model1.to(device)
     model1.eval()
 

@@ -160,7 +160,6 @@ def dual_network():
 def print_network():
     model = DualNet()
     model.load_state_dict(torch.load('./model/best.h5'))
-    model = model.double()
     state = State()
 
     # 推論のための入力データのシェイプの変換
@@ -168,7 +167,7 @@ def print_network():
     x = np.array([state.pieces, state.enemy_pieces])
     x = x.reshape(channel, file, rank)
     x = np.array([x])
-    x = torch.tensor(x,dtype=torch.double)
+    x = torch.tensor(x,dtype=torch.float32)
    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     

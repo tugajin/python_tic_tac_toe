@@ -40,7 +40,6 @@ def train_network():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DualNet()
     model.load_state_dict(torch.load('./model/best.h5'))
-    model = model.double()
     model = model.to(device)
     
     model.train()
@@ -67,11 +66,11 @@ def train_network():
             yv2.append(y_deep_values[j])
 
             if len(x) == RN_BATCH_SIZE:
-                x = torch.tensor(x,dtype=torch.double)
+                x = torch.tensor(x,dtype=torch.float32)
                 yp = np.array(yp)
-                yp = torch.tensor(yp,dtype=torch.double)
-                yv = torch.tensor(yv,dtype=torch.double)
-                yv2 = torch.tensor(yv2,dtype=torch.double)
+                yp = torch.tensor(yp,dtype=torch.float32)
+                yv = torch.tensor(yv,dtype=torch.float32)
+                yv2 = torch.tensor(yv2,dtype=torch.float32)
 
                 x = x.to(device)
                 yp = yp.to(device)

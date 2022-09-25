@@ -11,21 +11,23 @@ from single_network import *
 import random
 
 # パラメータの準備
-PV_EVALUATE_COUNT = 5500 # 1推論あたりのシミュレーション回数（本家は1600）
+PV_EVALUATE_COUNT = 50 # 1推論あたりのシミュレーション回数（本家は1600）
 
 # 推論
-def predict(model, state):
+def predict(model, state, device):
 
+    #print("predict")
+    #print(state)
     # 推論のための入力データのシェイプの変換
     file, rank, channel = DN_INPUT_SHAPE
     x = np.array([state.pieces, state.enemy_pieces])
+
+    #print(x)
+
     x = x.reshape(channel, file, rank)
     x = np.array([x])
-    x = torch.tensor(x,dtype=torch.double)
+    x = torch.tensor(x,dtype=torch.float32)
    
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #device = torch.device('cpu')
-
     x = x.to(device)
     
     with torch.no_grad():
@@ -33,7 +35,15 @@ def predict(model, state):
         y = model(x)
 
     # 価値の取得
-    value = y[0][0].item()
+    value = y[0].item()
+    #print(value)
+    #print("-------------------")
+    # 丸め
+    value = (int(value * 10000))/10000
+    if value >= 1:
+        value = 0.9999
+    elif value <= -1:
+        value = -0.9999
     return value
     #return random.uniform(-0.2,0.2)
 
@@ -41,7 +51,7 @@ def predict(model, state):
 def nodes_to_scores(nodes):
     scores = []
     for c in nodes:
-        scores.append(c.n)
+        scores.append(c.n-c.w)
     max_value = max(scores)
     for i, c in enumerate(nodes):
         if c.resolved:
@@ -57,7 +67,7 @@ def nodes_to_scores(nodes):
     return scores
 
 # UBFM木探索のスコアの取得
-def pv_ubfm_scores(model, state, temperature):
+def pv_ubfm_scores(model, state, device, temperature):
 
     # モンテカルロ木探索のノードの定義
     class Node:
@@ -125,8 +135,7 @@ def pv_ubfm_scores(model, state, temperature):
             if not self.child_nodes:
                 
                 # ニューラルネットワークの推論で方策と価値を取得
-                value = predict(model, self.state)
-
+                value = predict(model, self.state, device)
                 # 価値と試行回数の更新
                 self.w = value
                 self.n += 1
@@ -136,8 +145,6 @@ def pv_ubfm_scores(model, state, temperature):
                 self.child_nodes = []
                 for action in self.state.legal_actions():
                     self.child_nodes.append(Node(self.state.next(action),self.ply+1,action))
-                assert(value != -1)
-                assert(value != 1)
                 return value
 
             # 子ノードが存在する時
@@ -155,6 +162,10 @@ def pv_ubfm_scores(model, state, temperature):
                     value = -next_node.evaluate()
                     # 累計価値と試行回数の更新
                     next_node = self.next_child_node()
+                    if next_node is not None:
+                        if abs(next_node.w) != 999:
+                            self.w = -next_node.w
+                            self.best_action = next_node.action
                     value = self.w
                     self.n += 1
                 return value
@@ -163,8 +174,10 @@ def pv_ubfm_scores(model, state, temperature):
         def next_child_node(self):
             max_index = -1
             max_value = -9999
+            min_num = 9999999999999
             lose_num = 0
             draw_num = 0
+            moves_index_list = []
             child_nodes_len = len(self.child_nodes)
             assert(child_nodes_len != 0)
             for i, child_node in enumerate(self.child_nodes):
@@ -183,9 +196,16 @@ def pv_ubfm_scores(model, state, temperature):
                         assert(child_node.status == 0)
                         draw_num += 1
                 else:
-                    if -child_node.w > max_value:
+                    moves_index_list.append(i)
+                    if -child_node.w == max_value:
+                        if child_node.n < min_num:
+                            max_index = i
+                            max_value = -child_node.w
+                            min_num = child_node.n
+                    elif -child_node.w > max_value:
                         max_index = i
                         max_value = -child_node.w
+                        min_num = child_node.n
             #子供が全部引き分け
             if child_nodes_len == draw_num:
                 self.resolved = True
@@ -198,13 +218,13 @@ def pv_ubfm_scores(model, state, temperature):
                 self.status = -1
                 self.w = -1
                 return None
+            # 子供に引き分けと負けが付与済→引き分け
             elif child_nodes_len == (draw_num + lose_num):
                 assert(draw_num != 0)
                 self.resolved = True
                 self.status = 0
                 self.w = 0
                 return None
-            # アーク評価値が最大の子ノードを返す
             return self.child_nodes[max_index]
 
         def next_child_node_all(self):
@@ -218,22 +238,29 @@ def pv_ubfm_scores(model, state, temperature):
     root_node = Node(state, 0)
 
     # 複数回の評価の実行
-    for _ in range(PV_EVALUATE_COUNT):
+    #print("start simulation")
+    for i in range(PV_EVALUATE_COUNT):
+      #  print(f"try:{i}")
         if root_node.resolved:
             break
         root_node.evaluate()
+       # root_node.dump()
+    #print("end simulation")
 
     # 合法手の確率分布
     scores = nodes_to_scores(root_node.child_nodes)
 
     n = root_node
     #n.dump()
+
     #while True:
     while False:
         n.dump()
         if not n.child_nodes:
             break
-        best_child = n.next_child_node_all()
+        best_child = n.next_child_node()
+        if best_child is None:
+            break
         n = best_child
 
     if temperature == 0: # 最大値のみ1
@@ -241,14 +268,17 @@ def pv_ubfm_scores(model, state, temperature):
         scores = np.zeros(len(scores))
         scores[action] = 1
     else: # ボルツマン分布でバラつき付加
+        #print(scores)
+        if sum(scores) == 0:
+            scores = [1 for i in range(len(scores))]
         scores = boltzman(scores, temperature)
          
     return scores, root_node.w
 
 # UBFM木探索で行動選択
-def pv_ubfm_action(model, temperature=0):
+def pv_ubfm_action(model, device, temperature=0):
     def pv_ubfm_action(state):
-        scores,values = pv_ubfm_scores(model, state, temperature)
+        scores,values = pv_ubfm_scores(model, state, device, temperature)
         return np.random.choice(state.legal_actions(), p=scores)
     return pv_ubfm_action
 
@@ -260,24 +290,22 @@ def boltzman(xs, temperature):
 # 動作確認
 if __name__ == '__main__':
     # モデルの読み込み
-    path = sorted(Path('./model').glob('*.h5'))[-1]
+    path = sorted(Path('./model').glob('*single.h5'))[-1]
     print(path)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     #device = torch.device('cpu')
     
     model = SingleNet()
     model.load_state_dict(torch.load("./model/best_single.h5"))
-    model = model.double()
     model = model.to(device)
     model.eval()
     
     # 状態の生成
     state = State()
-    #state = state.next(0) 
-    #state = state.next(1) 
+
 
     # UBFM木探索で行動取得を行う関数の生成
-    next_action = pv_ubfm_action(model, 0)
+    next_action = pv_ubfm_action(model, device, 0.2)
 
     # ゲーム終了までループ
     while True:
@@ -293,4 +321,3 @@ if __name__ == '__main__':
 
         # 文字列表示
         print(state)
-        break

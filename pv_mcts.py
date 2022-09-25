@@ -20,7 +20,7 @@ def predict(model, state):
     x = np.array([state.pieces, state.enemy_pieces])
     x = x.reshape(channel, file, rank)
     x = np.array([x])
-    x = torch.tensor(x,dtype=torch.double)
+    x = torch.tensor(x,dtype=torch.float32)
    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     #device = torch.device('cpu')
@@ -157,7 +157,6 @@ if __name__ == '__main__':
     
     model = DualNet()
     model.load_state_dict(torch.load("./model/best.h5"))
-    model = model.double()
     model = model.to(device)
     model.eval()
     

@@ -16,120 +16,52 @@ DN_RESIDUAL_NUM =  16 # 残差ブロックの数（本家は19）
 DN_INPUT_SHAPE = (3, 3, 2) # 入力シェイプ
 DN_OUTPUT_SIZE = 9 # 配置先(3*3)
 
-class SELayer(nn.Module):
-    def __init__(self, channel, reduction=16):
-        super(SELayer, self).__init__()
-        self.l1 = nn.Linear(channel,channel//reduction)
-        self.l2 = nn.Linear(channel//reduction,channel)
+class ResNetBlock(nn.Module):
+    def __init__(self, channels):
+        super(ResNetBlock, self).__init__()
+        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(channels)
 
     def forward(self, x):
-        y = F.adaptive_avg_pool2d(x, (1, 1))
-        y = y.view(x.shape[0],x.shape[1])
-        y = F.relu(self.l1(y))
-        y = torch.sigmoid(self.l2(y))
-        y = y.view(x.shape[0],x.shape[1],1,1)
-        x = x * y
-        return x 
-    def out(self, x):
-        y = F.adaptive_avg_pool2d(x, (1, 1))
-        y = y.view(x.shape[0],x.shape[1])
-        y = F.relu(self.l1(y))
-        y = torch.sigmoid(self.l2(y))
-        y = y.view(x.shape[0],x.shape[1],1,1)
-        print(y)
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = F.relu(out)
 
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        return F.relu(out + x)
 class SingleNet(nn.Module):
-    def __init__(self):
-        super(SingleNet,self).__init__()
-        self.conv1 = nn.Conv2d(2,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv2 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv3 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv4 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv5 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv6 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv7 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv8 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
-        self.conv9 = nn.Conv2d(DN_FILTERS,DN_FILTERS,kernel_size=3,padding=1)
+    def __init__(self, blocks=15, channels=192, fcl=256):
+        super(SingleNet, self).__init__()
+        self.convl1 = nn.Conv2d(in_channels=2, out_channels=channels, kernel_size=3, padding=1, bias=False)
         
-        self.batch1 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch2 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch3 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch4 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch5 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch6 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch7 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch8 = nn.BatchNorm2d(DN_FILTERS)
-        self.batch9 = nn.BatchNorm2d(DN_FILTERS)
+        self.norm1 = nn.BatchNorm2d(channels)
 
-        self.se3 = SELayer(DN_FILTERS)
-        self.se5 = SELayer(DN_FILTERS)
-        self.se7 = SELayer(DN_FILTERS)
-        self.se9 = SELayer(DN_FILTERS)
-        
-        self.conv_v1 = nn.Conv2d(DN_FILTERS,1,kernel_size=1)
-        self.batch_v1 = nn.BatchNorm2d(1)
-        self.fc_v2 = nn.Linear(9,DN_FILTERS)
-        self.fc_v3 = nn.Linear(DN_FILTERS,1)
-    
-        
-    def forward(self,x):
+        # resnet blocks
+        self.blocks = nn.Sequential(*[ResNetBlock(channels) for _ in range(blocks)])
 
-        h1 = F.relu(self.batch1(self.conv1(x)))
-        
-        h2 = F.relu(self.batch2(self.conv2(h1)))
-        h3 = F.relu(self.se3(self.batch3(self.conv3(h1))) + h1)
-        
-        h4 = F.relu(self.batch4(self.conv4(h3)))
-        h5 = F.relu(self.se5(self.batch5(self.conv5(h4))) + h3)
-        
-        h6 = F.relu(self.batch6(self.conv6(h5)))
-        h7 = F.relu(self.se7(self.batch7(self.conv7(h6))) + h5)
+        # value head
+        self.value_conv1 = nn.Conv2d(in_channels=channels, out_channels=DN_OUTPUT_SIZE, kernel_size=1, bias=False)
+        self.value_norm1 = nn.BatchNorm2d(DN_OUTPUT_SIZE)
+        self.value_fc1 = nn.Linear(81, fcl)
+        self.value_fc2 = nn.Linear(fcl, 1)
 
-        h8 = F.relu(self.batch8(self.conv8(h7)))
-        h9 = F.relu(self.se9(self.batch9(self.conv9(h8))) + h7)
+    def forward(self, feature1):
 
-        #value
-        
-        h_v1 = F.relu(self.batch_v1(self.conv_v1(h9)))
+        x1_1 = self.convl1(feature1)
+        x = F.relu(self.norm1(x1_1))
 
-        h_v1 = h_v1.reshape(h_v1.shape[0],9)
-        
-        h_v2 = F.relu(self.fc_v2(h_v1))
-       
-        value = torch.tanh(self.fc_v3(h_v2))
-        
+        # resnet blocks
+        x = self.blocks(x)
+
+        # value head
+        value = F.relu(self.value_norm1(self.value_conv1(x)))
+        value = F.relu(self.value_fc1(torch.flatten(value, 1)))
+        value = torch.tanh(self.value_fc2(value))
         return value
-
-    def out_se(self,x):
-
-        print(x)
-        h1 = F.relu(self.batch1(self.conv1(x)))
-        
-        h2 = F.relu(self.batch2(self.conv2(h1)))
-
-        print("se3")
-        self.se3.out(self.batch3(self.conv3(h1)))
-
-        h3 = F.relu(self.se3(self.batch3(self.conv3(h1))) + h1)
-        
-        h4 = F.relu(self.batch4(self.conv4(h3)))
-        h5 = F.relu(self.se5(self.batch5(self.conv5(h4))) + h3)
-        
-        print("se5")
-        self.se5.out(self.batch5(self.conv5(h4)))
-
-        h6 = F.relu(self.batch6(self.conv6(h5)))
-        h7 = F.relu(self.se7(self.batch7(self.conv7(h6))) + h5)
-
-        print("se7")
-        self.se7.out(self.batch7(self.conv7(h6)))
-
-        h8 = F.relu(self.batch8(self.conv8(h7)))
-        h9 = F.relu(self.se9(self.batch9(self.conv9(h8))) + h7)
-
-        print("se9")
-        self.se9.out(self.batch9(self.conv9(h8)))
-
         
 # デュアルネットワークの作成
 def single_network():
@@ -143,9 +75,13 @@ def single_network():
     torch.save(model.state_dict(), './model/best_single.h5')# ベストプレイヤーのモデル
 
 def print_network():
+   
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+   
     model = SingleNet()
     model.load_state_dict(torch.load('./model/best_single.h5'))
-    model = model.double()
+    model = model.to(device)
+    model.eval()
     state = State()
 
     # 推論のための入力データのシェイプの変換
@@ -153,18 +89,18 @@ def print_network():
     x = np.array([state.pieces, state.enemy_pieces])
     x = x.reshape(channel, file, rank)
     x = np.array([x])
-    x = torch.tensor(x,dtype=torch.double)
-   
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
+    x = torch.tensor(x,dtype=torch.float32)
+       
     x = x.to(device)
-    
     with torch.no_grad():
         # 推論
-        model.out_se(x)
+        y = model(x)
 
+    # 価値の取得
+    value = y[0].item()
+    print(value)
 
 # 動作確認
 if __name__ == '__main__':
     single_network()
-   # print_network()
+    print_network()
