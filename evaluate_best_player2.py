@@ -4,7 +4,7 @@
 
 # パッケージのインポート
 from game import State, random_action, alpha_beta_action, mcts_action
-from pv_ubfm import pv_ubfm_action
+from pv_ubfm2 import pv_ubfm_action
 from pathlib import Path
 import numpy as np
 from single_network import *
@@ -27,7 +27,7 @@ def play(next_actions):
     # ゲーム終了までループ
     while True:
         #print("---------------------------------")
-        #print(state)
+        print(state)
         # ゲーム終了時
         if state.is_done():
             break

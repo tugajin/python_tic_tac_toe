@@ -4,7 +4,7 @@
 
 # パッケージのインポート
 from game import State
-from pv_ubfm import *
+from pv_ubfm2 import *
 from pathlib import Path
 from shutil import copy
 import numpy as np
@@ -108,51 +108,46 @@ def evaluate_problem():
     # 状態の生成
     state = State()
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #    print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
     # state = state.next(2)
     # print(state)
-    # #moves = state.legal_actions()
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # moves = state.legal_actions()
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = state.next(1)
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = state.next(4)
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = state.next(6)
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = State()
@@ -161,12 +156,11 @@ def evaluate_problem():
     # state = state.next(4) 
     # state = state.next(1) 
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = State()
@@ -175,12 +169,11 @@ def evaluate_problem():
     # state = state.next(5) 
     # state = state.next(1) 
     # print(state)
-    # #score, values = pv_ubfm_scores(model, state, EN_TEMPERATURE) 
-    # #moves = state.legal_actions()
-    # #for i in range(len(moves)):
-    # #    print(str(moves[i]) + ":" + str(score[i]))
-    # #print(values)
-    # print(predict(model,state))
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
     # print("---------------------")
 
     # state = State()
@@ -189,8 +182,7 @@ def evaluate_problem():
     # state = state.next(1) 
     # state = state.next(7) 
     # print(state)
-    # print(predict(model,state))
-    # score, values = pv_ubfm_scores(model, state, 1) 
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
     # moves = state.legal_actions()
     # for i in range(len(moves)):
     #     print(str(moves[i]) + ":" + str(score[i]))
@@ -198,33 +190,31 @@ def evaluate_problem():
     # print("---------------------")
 
 
+    # state = State()
+    # state = state.next(4) 
+    # state = state.next(0) 
+    # state = state.next(8) 
+    # print(state)
+    # score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    # moves = state.legal_actions()
+    # for i in range(len(moves)):
+    #     print(str(moves[i]) + ":" + str(score[i]))
+    # print(values)
+    # print("---------------------")
+
     state = State()
-    state = state.next(7) 
+    state = state.next(2) 
+    state = state.next(4) 
+    state = state.next(6) 
     print(state)
-    print(predict(model,state,device))
-    score, values = pv_ubfm_scores(model, state, device,1) 
+    score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
     moves = state.legal_actions()
     for i in range(len(moves)):
         print(str(moves[i]) + ":" + str(score[i]))
     print(values)
     print("---------------------")
 
-    #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #     model = SingleNet()
-    #     model.load_state_dict(torch.load('./model/best_single.h5'))
-    #     model = model.to(device)
-    #     model.eval()
-
-    #     state = State()
-    #     state = state.next(2) 
-    #     print(state)
-    #     print(predict(model,state))
-    #     scores, values = pv_ubfm_scores(model, state, 0) 
-    #     moves = state.legal_actions()
-    #     action = np.random.choice(state.legal_actions(), p=scores)
-    #     if action != 4:
-    #         print(action)
-    #         break
+   
 # 動作確認
 if __name__ == '__main__':
     #evaluate_network()

@@ -4,7 +4,7 @@
 
 # パッケージのインポート
 from game import *
-from pv_ubfm import pv_ubfm_scores
+from pv_ubfm2 import pv_ubfm_scores
 from dual_network import DN_OUTPUT_SIZE
 from datetime import datetime
 from pathlib import Path
@@ -67,7 +67,7 @@ def self_play():
             values = 0.0
         else:
             # 合法手の確率分布の取得
-            scores, values = pv_ubfm_scores(model, state, SP_TEMPERATURE)
+            scores, values = pv_ubfm_scores(model, state, device, SP_TEMPERATURE)
         # 学習データに状態と方策を追加
         #print(state)
         #print(values)

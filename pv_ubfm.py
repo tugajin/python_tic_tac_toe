@@ -177,7 +177,6 @@ def pv_ubfm_scores(model, state, device, temperature):
             min_num = 9999999999999
             lose_num = 0
             draw_num = 0
-            moves_index_list = []
             child_nodes_len = len(self.child_nodes)
             assert(child_nodes_len != 0)
             for i, child_node in enumerate(self.child_nodes):
@@ -195,17 +194,15 @@ def pv_ubfm_scores(model, state, device, temperature):
                     else:
                         assert(child_node.status == 0)
                         draw_num += 1
-                else:
-                    moves_index_list.append(i)
-                    if -child_node.w == max_value:
-                        if child_node.n < min_num:
-                            max_index = i
-                            max_value = -child_node.w
-                            min_num = child_node.n
-                    elif -child_node.w > max_value:
+                if -child_node.w == max_value:
+                    if child_node.n < min_num:
                         max_index = i
                         max_value = -child_node.w
                         min_num = child_node.n
+                elif -child_node.w > max_value:
+                    max_index = i
+                    max_value = -child_node.w
+                    min_num = child_node.n
             #子供が全部引き分け
             if child_nodes_len == draw_num:
                 self.resolved = True
@@ -251,7 +248,7 @@ def pv_ubfm_scores(model, state, device, temperature):
     scores = nodes_to_scores(root_node.child_nodes)
 
     n = root_node
-    #n.dump()
+    n.dump()
 
     #while True:
     while False:
@@ -290,8 +287,6 @@ def boltzman(xs, temperature):
 # 動作確認
 if __name__ == '__main__':
     # モデルの読み込み
-    path = sorted(Path('./model').glob('*single.h5'))[-1]
-    print(path)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     #device = torch.device('cpu')
     
