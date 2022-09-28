@@ -4,7 +4,6 @@
 
 # パッケージのインポート
 from game import State, random_action, alpha_beta_action, mcts_action
-from pv_ubfm2 import pv_ubfm_action2
 from pv_ubfm import pv_ubfm_action
 from pathlib import Path
 import numpy as np

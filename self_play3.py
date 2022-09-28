@@ -4,7 +4,7 @@
 
 # パッケージのインポート
 from game import *
-from pv_ubfm2 import pv_ubfm_scores
+from pv_ubfm import pv_ubfm_scores
 from dual_network import DN_OUTPUT_SIZE
 from datetime import datetime
 from pathlib import Path

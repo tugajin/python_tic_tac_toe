@@ -5,7 +5,6 @@
 # パッケージのインポート
 from game import State
 from pv_ubfm import *
-from pv_ubfm2 import *
 from pathlib import Path
 from shutil import copy
 import numpy as np
