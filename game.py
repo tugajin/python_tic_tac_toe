@@ -120,12 +120,13 @@ class State:
     def hash_key(self):
         key = 0
         offset = 10**8
+        ox = (2, 3) if self.is_first_player() else (3, 2)
         for piece, enemy in zip(self.pieces,self.enemy_pieces):
             tmp_key = 1
             if piece == 1:
-                tmp_key = 2
+                tmp_key = ox[0]
             elif enemy == 1:
-                tmp_key = 3
+                tmp_key = ox[1]
             key += tmp_key * offset
             offset /= 10
         return int(key)
@@ -295,7 +296,7 @@ def mcts_action(state):
 def gen_pos_list():
     history = []
     # 状態の生成
-    for i in range(2000000000):
+    for i in range(20000):
         state = State()
         print(f"\rtry:{i} num:{len_pos_dict()}",end="")
         #ゲーム終了までのループ
