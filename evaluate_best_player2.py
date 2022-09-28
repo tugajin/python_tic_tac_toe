@@ -4,7 +4,8 @@
 
 # パッケージのインポート
 from game import State, random_action, alpha_beta_action, mcts_action
-from pv_ubfm2 import pv_ubfm_action
+from pv_ubfm2 import pv_ubfm_action2
+from pv_ubfm import pv_ubfm_action
 from pathlib import Path
 import numpy as np
 from single_network import *
@@ -81,7 +82,7 @@ def evaluate_best_player():
     model = model.to(device)
     model.eval()
     # PV MCTSで行動選択を行う関数の生成
-    next_pv_mcts_action = pv_ubfm_action(model, device, 0)
+    next_pv_mcts_action = pv_ubfm_action2(model, device, 0)
 
     # VSランダム
     #next_actions = (next_pv_mcts_action, random_action)

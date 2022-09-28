@@ -215,12 +215,12 @@ def pv_ubfm_scores(model, state, device, temperature):
             not_resolved = [child for child in self.child_nodes if not child.resolved]
             assert(len(not_resolved) != 0)
             max_child = max(not_resolved,key=lambda x: (-x.w, -x.n) )
-            debug_max_child = self.next_child_node_debug()
-            if max_child.action != debug_max_child.action:
-                self.dump(True)
-                print(max_child.action)
-                print(debug_max_child.action)
-                assert(False)
+            # debug_max_child = self.next_child_node_debug()
+            # if max_child.action != debug_max_child.action:
+            #     self.dump(True)
+            #     print(max_child.action)
+            #     print(debug_max_child.action)
+            #     assert(False)
             return max_child
 
         # 現在のnodeの情報を更新
@@ -314,14 +314,16 @@ def pv_ubfm_scores(model, state, device, temperature):
     else: # ボルツマン分布でバラつき付加
         scores = boltzman(scores, temperature)
     return scores, root_node.w
-
+def pv_ubfm_scores2(model, state, device, temperature):
+    return pv_ubfm_scores(model, state, device, temperature)
 # UBFM木探索で行動選択
 def pv_ubfm_action(model, device, temperature=0):
     def pv_ubfm_action(state):
         scores,values = pv_ubfm_scores(model, state, device, temperature)
         return np.random.choice(state.legal_actions(), p=scores)
     return pv_ubfm_action
-
+def pv_ubfm_action2(model, device, temperature=0):
+    return pv_ubfm_action(model, device, temperature)
 # ボルツマン分布
 def boltzman(xs, temperature):
     xs = [x ** (1 / temperature) for x in xs]

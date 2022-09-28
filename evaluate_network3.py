@@ -4,11 +4,13 @@
 
 # パッケージのインポート
 from game import State
+from pv_ubfm import *
 from pv_ubfm2 import *
 from pathlib import Path
 from shutil import copy
 import numpy as np
 from single_network import *
+import time
 
 # パラメータの準備
 EN_GAME_COUNT = 10 # 1評価あたりのゲーム数（本家は400）
@@ -203,16 +205,23 @@ def evaluate_problem():
     # print("---------------------")
 
     state = State()
-    state = state.next(2) 
-    state = state.next(4) 
-    state = state.next(6) 
     print(state)
+    start_time = time.time()
     score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
-    moves = state.legal_actions()
-    for i in range(len(moves)):
-        print(str(moves[i]) + ":" + str(score[i]))
-    print(values)
-    print("---------------------")
+    end_time = time.time()
+    print(end_time-start_time)
+    
+    start_time = time.time()
+    score, values = pv_ubfm_scores2(model, state, device, EN_TEMPERATURE) 
+    end_time = time.time()
+    print(end_time-start_time)
+    
+
+    #moves = state.legal_actions()
+    #for i in range(len(moves)):
+    #    print(str(moves[i]) + ":" + str(score[i]))
+    #print(values)
+    #print("---------------------")
 
    
 # 動作確認

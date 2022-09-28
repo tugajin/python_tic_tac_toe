@@ -248,7 +248,7 @@ def pv_ubfm_scores(model, state, device, temperature):
     scores = nodes_to_scores(root_node.child_nodes)
 
     n = root_node
-    n.dump()
+    #n.dump()
 
     #while True:
     while False:
