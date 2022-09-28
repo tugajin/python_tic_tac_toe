@@ -40,7 +40,6 @@ def predict(model, node_list, device):
     # 価値の取得
     for i in range(len(node_list)):
         value = y[i][0].item()
-
         # 丸め
         value = (int(value * 10000))/10000
         if value >= 1:
@@ -48,6 +47,11 @@ def predict(model, node_list, device):
         elif value <= -1:
             value = -0.9999
         node_list[i].w = value
+        node_list[i].n += 1
+        if node_list[i].state.is_done():
+            # 勝敗結果で価値を取得
+            node_list[i].w = node_list[i].completion = -1 if node_list[i].state.is_lose() else 0
+            node_list[i].resolved = True
 
 # ノードのリストを試行回数のリストに変換
 def nodes_to_scores(nodes):
@@ -117,15 +121,15 @@ def pv_ubfm_scores(model, state, device, temperature):
         # 局面の価値の計算
         def evaluate(self):
             assert(not self.resolved)
+            assert(not self.state.is_done())
             # ゲーム終了時
             if self.state.is_done():
-
                 # 勝敗結果で価値を取得
                 self.w = self.completion = -1 if self.state.is_lose() else 0
                 # 試行回数の更新
                 self.n += 1
                 self.resolved = True
-        
+                assert(False)
                 return IS_DONE_VALUE
 
             # 子ノードが存在しない時
@@ -136,9 +140,7 @@ def pv_ubfm_scores(model, state, device, temperature):
                     self.child_nodes.append(Node(self.state.next(action),self.ply+1,action))
                 # ニューラルネットワークの推論で価値を取得
                 predict(model, self.child_nodes, device)
-                # 試行回数の更新
-                self.n += 1
-                return TERMINAL_VALUE
+                value = TERMINAL_VALUE
 
             # 子ノードが存在する時
             else:
@@ -146,9 +148,10 @@ def pv_ubfm_scores(model, state, device, temperature):
                 next_node = self.next_child_node()
                 assert(next_node is not None)
                 value = next_node.evaluate()
-                # 累計価値と試行回数の更新
-                self.update_node()
-                return value
+
+            # 価値と試行回数の更新
+            self.update_node()
+            return value
 
         # 評価値が最大の子ノードを取得
         def next_child_node(self):
@@ -219,17 +222,19 @@ def pv_ubfm_scores(model, state, device, temperature):
             #     self.dump(True)
             #     assert(False)
             #     return None
-            # min_max_index = self.next_child_node_fast()
-            # if max_index != min_max_index:
-            #     self.dump(True)
-            #     print(max_index)
-            #     print(min_max_index)
-            #     assert(False)
+            min_max_index = self.next_child_node_fast()
+            if max_index != min_max_index:
+                self.dump(True)
+                print(max_index)
+                print(min_max_index)
+                assert(False)
             assert(not self.child_nodes[max_index].resolved)
             return self.child_nodes[max_index]
         
         def next_child_node_fast(self):
-            max_child = max(self.child_nodes,key=lambda x: (-x.w, -x.n) )
+            not_resolved = [child for child in self.child_nodes if not child.resolved]
+            assert(len(not_resolved) != 0)
+            max_child = max(not_resolved,key=lambda x: (-x.w, -x.n) )
             return self.child_nodes.index(max_child)
 
         # 現在のnodeの情報を更新
