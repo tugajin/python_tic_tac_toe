@@ -314,16 +314,14 @@ def pv_ubfm_scores(model, state, device, temperature):
     else: # ボルツマン分布でバラつき付加
         scores = boltzman(scores, temperature)
     return scores, root_node.w
-def pv_ubfm_scores2(model, state, device, temperature):
-    return pv_ubfm_scores(model, state, device, temperature)
+
 # UBFM木探索で行動選択
 def pv_ubfm_action(model, device, temperature=0):
     def pv_ubfm_action(state):
         scores,values = pv_ubfm_scores(model, state, device, temperature)
         return np.random.choice(state.legal_actions(), p=scores)
     return pv_ubfm_action
-def pv_ubfm_action2(model, device, temperature=0):
-    return pv_ubfm_action(model, device, temperature)
+
 # ボルツマン分布
 def boltzman(xs, temperature):
     xs = [x ** (1 / temperature) for x in xs]
@@ -342,7 +340,6 @@ if __name__ == '__main__':
     
     # 状態の生成
     state = State()
-
 
     # UBFM木探索で行動取得を行う関数の生成
     next_action = pv_ubfm_action(model, device, 0)
