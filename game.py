@@ -10,7 +10,7 @@ import pickle
 from datetime import datetime
 
 pos_dict = {}
-ALL_POS_LEN = 3**9
+ALL_POS_LEN = 5478
 
 def append_pos_dict(k):
     if k in pos_dict:

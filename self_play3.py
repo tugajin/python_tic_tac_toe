@@ -16,7 +16,7 @@ from single_network import *
 
 # パラメータの準備
 SP_GAME_COUNT = 500 # セルフプレイを行うゲーム数（本家は25000）
-SP_TEMPERATURE = 1.0 # ボルツマン分布の温度パラメータ
+SP_TEMPERATURE = 0.7 # ボルツマン分布の温度パラメータ
 
 def load_data():
     with open('./base/base.pos',mode='rb') as f:

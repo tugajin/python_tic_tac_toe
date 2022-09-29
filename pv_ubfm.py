@@ -61,7 +61,7 @@ def nodes_to_scores(nodes):
             elif c.completion == 0:
                 n = c.n
             elif c.completion == 1:
-                n = 0
+                n = 0.1
             else:
                 assert(False)
             scores[i] = n

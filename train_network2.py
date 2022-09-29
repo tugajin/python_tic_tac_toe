@@ -84,7 +84,7 @@ def train_network():
                 optimizer.zero_grad()
                 outputs = model(x)
                 outputs = torch.squeeze(outputs)
-                loss_values = (1 * torch.sum((outputs - yv) ** 2)) + (0.0 * torch.sum((outputs - yv2) ** 2))
+                loss_values = (0.0 * torch.sum((outputs - yv) ** 2)) + (1.0 * torch.sum((outputs - yv2) ** 2))
                 loss = loss_values 
 
                 loss.backward()
@@ -99,10 +99,6 @@ def train_network():
 
     # 最新プレイヤーのモデルの保存
     torch.save(model.state_dict(), './model/latest_single.h5')
-
-def generate_rand_model():
-    model = SingleNet()
-    torch.save(model.state_dict(), './model/best_single.h5')
 
 def check_train_data():
     # 学習データの読み込み
@@ -122,6 +118,5 @@ def check_train_data():
 
 # 動作確認
 if __name__ == '__main__':
-    #generate_rand_model()
     #train_network()
     check_train_data()

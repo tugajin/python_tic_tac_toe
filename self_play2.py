@@ -5,7 +5,6 @@
 # パッケージのインポート
 from game import *
 from pv_ubfm import pv_ubfm_scores
-from dual_network import DN_OUTPUT_SIZE
 from datetime import datetime
 from pathlib import Path
 import numpy as np
@@ -35,7 +34,7 @@ def write_data(history):
         pickle.dump(history, f)
 
 # 1ゲームの実行
-def play(model):
+def play(model, device):
     # 学習データ
     history = []
 
@@ -50,7 +49,7 @@ def play(model):
 
         # 合法手の確率分布の取得
 
-        scores, values = pv_ubfm_scores(model, state, SP_TEMPERATURE)
+        scores, values = pv_ubfm_scores(model, state, device, SP_TEMPERATURE)
 
         # 学習データに状態と方策を追加
         history.append([[state.pieces, state.enemy_pieces], None, values])
@@ -60,7 +59,7 @@ def play(model):
         #     state3 = state2.mirror()
         #     history.append([[state2.pieces, state2.enemy_pieces], None, values])
         #     history.append([[state3.pieces, state3.enemy_pieces], None, values])
-        if i < 2:
+        if random.random() < 0.2:
             action = np.random.choice(state.legal_actions())
         else:
             # 行動の取得
@@ -79,15 +78,6 @@ def play(model):
     #print(state)
     #print(value)
     for i in range(len(history)):
-        if i >=2 and abs(history[i][2]) == 1:
-            if history[i][2] != value:
-                print("found error game")
-                state = State(history[i][0][0],history[i][0][1])
-                print(state)
-                print(history[i][1])
-                print(history[i][2])
-                print(value)
-                exit(1)
         history[i][1] = value
         value = -value
     return history
@@ -108,7 +98,7 @@ def self_play():
     # 複数回のゲームの実行
     for i in range(SP_GAME_COUNT):
         # 1ゲームの実行
-        h = play(model)
+        h = play(model, device)
         history.extend(h)
 
         # 出力
