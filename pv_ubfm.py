@@ -227,7 +227,7 @@ def pv_ubfm_scores(model, state, device, temperature):
         def update_node(self):
             max_index = -1
             max_value = -9999
-            min_num = self.n
+            max_num = -1
             lose_num = 0
             draw_num = 0
             child_nodes_len = len(self.child_nodes)
@@ -249,14 +249,14 @@ def pv_ubfm_scores(model, state, device, temperature):
                         assert(child_node.completion == 0)
                         draw_num += 1
                 if -child_node.w == max_value:
-                    if child_node.n < min_num:
+                    if child_node.n > max_num:
                         max_index = i
                         max_value = -child_node.w
-                        min_num = child_node.n
+                        max_num = child_node.n
                 elif -child_node.w > max_value:
                     max_index = i
                     max_value = -child_node.w
-                    min_num = child_node.n
+                    max_num = child_node.n
             self.n += 1
             #子供が全部引き分け
             if child_nodes_len == draw_num:
