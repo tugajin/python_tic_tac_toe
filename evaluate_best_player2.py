@@ -10,7 +10,7 @@ import numpy as np
 from single_network import *
 
 # パラメータの準備
-EP_GAME_COUNT = 1000000000  # 1評価あたりのゲーム数
+EP_GAME_COUNT = 1000000  # 1評価あたりのゲーム数
 
 # 先手プレイヤーのポイント
 def first_player_point(ended_state):
@@ -81,7 +81,7 @@ def evaluate_best_player():
     model = model.to(device)
     model.eval()
     # PV MCTSで行動選択を行う関数の生成
-    next_pv_mcts_action = pv_ubfm_action2(model, device, 0)
+    next_pv_mcts_action = pv_ubfm_action(model, device, 0)
 
     # VSランダム
     #next_actions = (next_pv_mcts_action, random_action)

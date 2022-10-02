@@ -196,6 +196,19 @@ def evaluate_problem():
         print(str(moves[i]) + ":" + str(score[i]))
     print(values)
 
+
+
+    state = State()
+    state = state.next(2) 
+    state = state.next(7) 
+    print(state)
+    #print(predict(model,state))
+    score, values = pv_ubfm_scores(model, state, device, EN_TEMPERATURE) 
+    moves = state.legal_actions()
+    for i in range(len(moves)):
+        print(str(moves[i]) + ":" + str(score[i]))
+    print(values)
+
 # 動作確認
 if __name__ == '__main__':
     #evaluate_network()

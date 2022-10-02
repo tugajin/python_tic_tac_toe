@@ -59,7 +59,7 @@ def play(model, device):
         #     state3 = state2.mirror()
         #     history.append([[state2.pieces, state2.enemy_pieces], None, values])
         #     history.append([[state3.pieces, state3.enemy_pieces], None, values])
-        if random.random() < 0.2:
+        if random.random() < 0.4:
             action = np.random.choice(state.legal_actions())
         else:
             # 行動の取得

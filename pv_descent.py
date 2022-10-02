@@ -1,18 +1,28 @@
 # ====================
-# UBFMの作成
+# Descentの作成
 # ====================
 
 # パッケージのインポート
-from game import State
 from math import sqrt
+from game import *
+from pv_ubfm import pv_ubfm_scores
+from datetime import datetime
 from pathlib import Path
 from single_network import *
-import numpy as np
+
 import random
 import operator
+import numpy as np
+import pickle
+import os
+import torch
+import copy
 
 # パラメータの準備
 PV_EVALUATE_COUNT = 50 # 1推論あたりのシミュレーション回数（本家は1600）
+# パラメータの準備
+SP_GAME_COUNT = 50 # セルフプレイを行うゲーム数（本家は25000）
+SP_TEMPERATURE = 1.0 # ボルツマン分布の温度パラメータ
 
 # 推論
 def predict(model, node_list, device):
@@ -75,8 +85,8 @@ def nodes_to_scores(nodes):
             scores[i] = c.n - c.w
     return scores
 
-# UBFM木探索のスコアの取得
-def pv_ubfm_scores(model, state, device, temperature):
+# Descent木探索のスコアの取得
+def pv_descent_scores(model, state, device, history, temperature):
 
     # モンテカルロ木探索のノードの定義
     class Node:
@@ -143,16 +153,15 @@ def pv_ubfm_scores(model, state, device, temperature):
                     self.child_nodes.append(Node(self.state.next(action),self.ply+1,action))
                 # ニューラルネットワークの推論で価値を取得
                 predict(model, self.child_nodes, device)
-
-            # 子ノードが存在する時
-            else:
+                # 価値と試行回数の更新
+                self.update_node()
+            if not self.resolved:
                 # 評価値が最大の子ノードを取得
                 next_node = self.next_child_node()
                 assert(next_node is not None)
                 next_node.evaluate()
-
-            # 価値と試行回数の更新
-            self.update_node()
+                # 価値と試行回数の更新
+                self.update_node()
 
         def next_child_node_debug(self):
             max_index = -1
@@ -303,6 +312,9 @@ def pv_ubfm_scores(model, state, device, temperature):
     # 合法手の確率分布
     scores = nodes_to_scores(root_node.child_nodes)
 
+    # 探索木の情報をhistoryに登録
+    add_history(history, root_node)
+
     n = root_node
     #n.dump(True)
 
@@ -324,46 +336,87 @@ def pv_ubfm_scores(model, state, device, temperature):
         scores = boltzman(scores, temperature)
     return scores, root_node.w
 
-# UBFM木探索で行動選択
-def pv_ubfm_action(model, device, temperature=0):
-    def pv_ubfm_action(state):
-        scores,values = pv_ubfm_scores(model, state, device, temperature)
+# Descent木探索で行動選択
+def pv_descent_action(model, device, history, temperature=0):
+    def pv_descent_action(state):
+        scores,values = pv_descent_scores(model, state, device, history, temperature)
         return np.random.choice(state.legal_actions(), p=scores)
-    return pv_ubfm_action
+    return pv_descent_action
 
 # ボルツマン分布
 def boltzman(xs, temperature):
     xs = [x ** (1 / temperature) for x in xs]
     return [x / sum(xs) for x in xs]
 
-# 動作確認
-if __name__ == '__main__':
-    # モデルの読み込み
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #device = torch.device('cpu')
-    
-    model = SingleNet()
-    model.load_state_dict(torch.load("./model/best_single.h5"))
-    model = model.to(device)
-    model.eval()
-    
+# 探索木の情報を保存
+def add_history(history, node):
+    state = copy.deepcopy(node.state)
+    history.append([[state.pieces, state.enemy_pieces], node.w, node.completion, node.resolved])
+    # このノードの情報を格納
+    if node.child_nodes is not None:
+        for child in node.child_nodes:
+            add_history(history,child)
+
+# 学習データの保存
+def write_data(history):
+    now = datetime.now()
+    os.makedirs('./data/', exist_ok=True) # フォルダがない時は生成
+    path = './data/{:04}{:02}{:02}{:02}{:02}{:02}.history4'.format(
+        now.year, now.month, now.day, now.hour, now.minute, now.second)
+    with open(path, mode='wb') as f:
+        pickle.dump(history, f)
+
+# 1ゲームの実行
+def play(model, device):
+    # 学習データ
+    history = []
+
     # 状態の生成
     state = State()
-
-    # UBFM木探索で行動取得を行う関数の生成
-    next_action = pv_ubfm_action(model, device, 0)
-
-    # ゲーム終了までループ
+    i = 0
     while True:
         # ゲーム終了時
         if state.is_done():
             break
 
-        # 行動の取得
-        action = next_action(state)
-
+        # 合法手の確率分布の取得
+        scores, values = pv_descent_scores(model, state, device, history, SP_TEMPERATURE)
+        # 学習データに状態と方策を追加
+        if random.random() < 0.4:
+            action = np.random.choice(state.legal_actions())
+        else:
+            # 行動の取得
+            action = state.legal_actions()[np.argmax(scores)]
         # 次の状態の取得
         state = state.next(action)
+        i += 1
+    return history
 
-        # 文字列表示
-        print(state)
+# セルフプレイ
+def self_play():
+    # 学習データ
+    history = []
+
+    # ベストプレイヤーのモデルの読み込み
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #device = torch.device('cpu')
+    model = SingleNet()
+    model.load_state_dict(torch.load('./model/best_single.h5'))
+    model = model.to(device)
+    model.eval()
+
+    # 複数回のゲームの実行
+    for i in range(SP_GAME_COUNT):
+        # 1ゲームの実行
+        h = play(model, device)
+        history.extend(h)
+        # 出力
+        print('\rSelfPlay {}/{}'.format(i+1, SP_GAME_COUNT), end='')
+
+    print(f"history_len:{len(history)}")
+    # 学習データの保存
+    write_data(history)
+
+# 動作確認
+if __name__ == '__main__':
+    self_play()
